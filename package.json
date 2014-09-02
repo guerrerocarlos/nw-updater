@@ -1,0 +1,19 @@
+{
+  "name": "nw-updater",
+  "version": "0.0.1",
+  "description": "Node-webkit direct and distributed (torrent) auto-updater (taken from Popcorntime.io)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guerrerocarlos/nw-updater"
+  },
+  "author": "Carlos Guerrero <guerrerocarlos@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guerrerocarlos/nw-updater/issues"
+  },
+  "homepage": "https://github.com/guerrerocarlos/nw-updater"
+}
