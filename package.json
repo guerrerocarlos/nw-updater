@@ -1,7 +1,7 @@
 {
   "name": "nw-updater",
-  "version": "0.0.1",
-  "description": "Node-webkit direct and distributed (torrent) auto-updater (taken from Popcorntime.io)",
+  "version": "0.0.2",
+  "description": "Node-webkit direct and distributed (torrent-based) auto-updater (taken from Popcorntime.io)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,5 +15,14 @@
   "bugs": {
     "url": "https://github.com/guerrerocarlos/nw-updater/issues"
   },
-  "homepage": "https://github.com/guerrerocarlos/nw-updater"
+  "homepage": "https://github.com/guerrerocarlos/nw-updater",
+  "dependencies": {
+    "adm-zip": "^0.4.4",
+    "q": "^1.0.1",
+    "request": "^2.40.0",
+    "rimraf": "^2.2.8",
+    "semver": "^3.0.1",
+    "torrent-stream": "^0.15.0",
+    "underscore": "^1.7.0"
+  }
 }

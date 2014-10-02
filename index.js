@@ -1,4 +1,3 @@
-(function(App) {
     'use strict';
 
     var request = require('request'),
@@ -16,7 +15,7 @@
 
 ;
 
-    var UPDATE_ENDPOINT = AdvSettings.get('updateApiEndpoint') + 'update.json',
+    var UPDATE_ENDPOINT = require('./updater-settings').updateApiEndpoint + 'update.json',
         CHANNELS = ['stable', 'beta', 'nightly'],
         FILENAME = 'package.nw.new',
         VERIFY_PUBKEY =
@@ -32,6 +31,7 @@
             'GOm3OxA3zKXG4cjy6TyEKajYlT45Q+tgt1L1HuGAJjWFRSA0PP9ctC6nH+2N3HmW\n' +
             'RTcms0CPio56gg==\n' +
             '-----END PUBLIC KEY-----\n';
+
 
     function forcedBind(func, thisVar) {
         return function() {
@@ -51,7 +51,34 @@
             channel: 'beta'
         });
 
-        this.outputDir = App.settings.os === 'linux' ? process.execPath : process.cwd();
+        var os = ""
+        switch (process.platform) {
+            case 'darwin':
+                os = 'mac'
+                break;
+            case 'win32':
+                os = 'windows'
+                break;
+            case 'linux':
+                os = 'linux'
+                break;
+            default:
+                os = 'unknown'
+                break;
+        }
+        this.os = os
+
+        if (/64/.test(process.arch)) {
+            this.arch = 'x64';
+        } else {
+            this.arch = 'x86';
+        }
+
+        gui = require('nw.gui');
+        this.currentVersion = gui.App.manifest.version;
+
+
+        this.outputDir = this.os === 'linux' ? process.execPath : process.cwd();
         this.updateData = null;
     }
 
@@ -62,15 +89,15 @@
 
         if(!(!_.contains(fs.readdirSync('.'), '.git') || // Test Development
             (   // Test Windows
-                App.settings.os === 'windows' && 
+                this.os === 'windows' && 
                 process.cwd().indexOf(process.env.APPDATA) !== -1
             ) ||
             (   // Test Linux
-                App.settings.os === 'linux' &&
+                this.os === 'linux' &&
                 _.contains(fs.readdirSync('.'), 'package.nw')
             ) ||
             (   // Test Mac OS X
-                App.settings.os === 'mac' &&
+                this.os === 'mac' &&
                 process.cwd().indexOf('Resources/app.nw') !== -1
             ))
         ) {
@@ -88,26 +115,26 @@
         });
 
         return promise.then(function(data) {
-            if(!_.contains(Object.keys(data), App.settings.os)) {
+            if(!_.contains(Object.keys(data), this.os)) {
                 // No update for this OS, FreeBSD or SunOS.
                 // Must not be an official binary
                 return false;
             }
 
-            var updateData = data[App.settings.os];
-            if(App.settings.os === 'linux') {
-                updateData = updateData[App.settings.arch];
+            var updateData = data[this.os];
+            if(this.os === 'linux') {
+                updateData = updateData[this.arch];
             }
 
             // Normalize the version number
             if(!updateData.version.match(/-\d+$/)) {
                 updateData.version += '-0';
             }
-            if(!App.settings.version.match(/-\d+$/)) {
-                App.settings.version.version += '-0';
+            if(!this.currentVersion.match(/-\d+$/)) {
+                this.currentVersion += '-0';
             }
 
-            if(semver.gt(updateData.version, App.settings.version)) {
+            if(semver.gt(updateData.version, this.currentVersion)) {
                 win.debug('Updating to version %s', updateData.version);
                 self.updateData = updateData;
                 return true;
@@ -266,7 +293,7 @@
     }
 
     Updater.prototype.install = function(downloadPath) {
-        var os = App.settings.os;
+        var os = this.os;
         var promise;
         if(os === 'windows') {
             promise = installWindows;
@@ -334,6 +361,4 @@
             .then(forcedBind(this.displayNotification, this));
     };
 
-    App.Updater = Updater;
-
-})(window.App);
+module.exports = Updater;
