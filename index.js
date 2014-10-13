@@ -76,10 +76,14 @@ function Updater(options) {
     }
 
     this.currentVersion = options.currentVersion
+    console.log(this.currentVersion)
 
 
     this.outputDir = this.os === 'linux' ? process.execPath : process.cwd();
     this.updateData = null;
+
+    this.check = this.check.bind(this)
+    this.download = this.download.bind(this)
 }
 
 Updater.prototype.check = function() {
@@ -147,44 +151,53 @@ Updater.prototype.check = function() {
         }
 
         // Normalize the version number
-        /*
         if(!updateData.version.match(/-\d+$/)) {
+            console.log("fixing UpdateData")
             updateData.version += '-0';
         }
-        if(!this.currentVersion.match(/-\d+$/)) {
-            this.currentVersion += '-0';
-        }*/
+        console.log(updateData.version)
+        console.log(self.currentVersion)
+        if(!self.currentVersion.match(/-\d+$/)) {
+            console.log("fixing thisCurrentVersion")
+            self.currentVersion += '-0';
+        }
+        console.log(self.currentVersion)
         console.log("pueh4")
         //var self = data["this"]
-        console.log(gui.App.manifest.version)
-        console.log(self.currentVersion)
 
-        if(semver.gt(updateData.version, this.currentVersion)) {
-            win.debug('Updating to version %s', updateData.version);
+        if(semver.gt(updateData.version, self.currentVersion)) {
+            console.log('Updating to version %s', updateData.version);
             self.updateData = updateData;
             return true;
         }
+        console.log("not updating :()")
 
-    console.log(">>> "+self.updateData)
+        console.log(">>> "+self.updateData)
 
-    console.log("latest version!")
-        win.debug('Not updating because we are running the latest version');
+        console.log("latest version!")
+        console.log('Not updating because we are running the latest version');
         return false;
+
     });
 };
 
 Updater.prototype._download = function (downloadStream, output, defer) {
+    console.log("this is serious, going to download this new version")
     downloadStream.pipe(fs.createWriteStream(output));
     downloadStream.on('complete', function() {
+        console.log("OMG this thing completed!")
         defer.resolve(output);
     });
 };
 
 Updater.prototype.download = function(source, output) {
-    var self = this;
+    console.log(source)
+    console.log(output)
     var defer = Q.defer();
-    switch (url.parse (source).protocol) {
-    case 'magnet':
+    var self = this;
+    console.log("everything good so far")
+    switch (url.parse(source).protocol) {
+    case 'magnet:':
         var engine = torrentStream(source);
         engine.on('ready', function() {
             var file = engine.files.pop();
@@ -192,8 +205,9 @@ Updater.prototype.download = function(source, output) {
             self._download(file.createReadStream(), output, defer);
         });
         break;
-    case 'http':
-    case 'https':
+    case 'http:':
+    case 'https:':
+        console.log("seems legit")
         self._download(request(source), output, defer);
         break;
     }
@@ -378,21 +392,29 @@ Updater.prototype.displayNotification = function() {
 Updater.prototype.update = function() {
     var outputFile = path.join(path.dirname(this.outputDir), FILENAME);
 
-    if(! this.updateData) {
+    if(this.updateData){
+        return this.download(this.updateData.updateUrl, outputFile)
+            .then(forcedBind(this.verify, this))
+            .then(forcedBind(this.install, this))
+    }else{
         var self = this;
-        return this.check().then(function(updateAvailable) {
-            if(updateAvailable) {
-                return self.update();
+        console.log("checking with known method")
+        return this.check().then(function(updateAvailable){
+            console.log("is update available?")
+            console.log(updateAvailable)
+            if(updateAvailable){
+                console.log("update is available!")
+                return self.download(self.updateData.updateUrl, outputFile)
+                    .then(forcedBind(self.verify, self))
+                    .then(forcedBind(self.install, self));
+            }else{
+                console.log("not updating this thing")
+                return false
             }
-            return false;
-        });
+        })
     }
 
-    // If we have already checked for updates...
-    return this.download(this.updateData.updateUrl, outputFile)
-        .then(forcedBind(this.verify, this))
-        .then(forcedBind(this.install, this))
-        .then(forcedBind(this.displayNotification, this));
+
 };
 
 module.exports = Updater
