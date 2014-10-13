@@ -1,5 +1,5 @@
 var Settings = {}
 
-Settings.updateApiEndpoint = "http://popcorntime.io"
+Settings.updateApiEndpoint = "http://torrentv.github.io/update.json"
 
 module.exports = Settings

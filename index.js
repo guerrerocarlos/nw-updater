@@ -15,7 +15,7 @@ var request = require('request'),
 
 ;
 
-var UPDATE_ENDPOINT = require('./updater-settings').updateApiEndpoint + 'update.json',
+var UPDATE_ENDPOINT = require('./updater-settings').updateApiEndpoint,
     CHANNELS = ['stable', 'beta', 'nightly'],
     FILENAME = 'package.nw.new',
     VERIFY_PUBKEY =
@@ -75,8 +75,7 @@ function Updater(options) {
         this.arch = 'x86';
     }
 
-    //gui = require('nw.gui');
-    //this.currentVersion = gui.App.manifest.version;
+    this.currentVersion = options.currentVersion
 
 
     this.outputDir = this.os === 'linux' ? process.execPath : process.cwd();
@@ -84,6 +83,7 @@ function Updater(options) {
 }
 
 Updater.prototype.check = function() {
+    console.log("checking if update available")
     var defer = Q.defer();
     var promise = defer.promise;
     var self = this;
@@ -107,33 +107,57 @@ Updater.prototype.check = function() {
         return defer.promise;
     }
 
+    console.log("sending request "+this.os)
     request(this.options.endpoint, {json:true}, function(err, res, data) {
+
+        console.log("request sent")
+        console.log(self)
+
         if(err || !data) {
             defer.reject(err);
         } else {
-            defer.resolve(data);
+            defer.resolve({"data": data, "os":self.os, "arch": this.arch, "this": self});
         }
+        console.log("sending sent")
     });
 
     return promise.then(function(data) {
+        console.log("aja")
+        var self = data["this"]
+        console.log(self)
+        /*
         if(!_.contains(Object.keys(data), this.os)) {
             // No update for this OS, FreeBSD or SunOS.
             // Must not be an official binary
+            console.log("something wrong happened...")
             return false;
         }
+        */
 
-        var updateData = data[this.os];
-        if(this.os === 'linux') {
-            updateData = updateData[this.arch];
+        console.log("pueh")
+        console.log(data["os"])
+        console.log("pueh2")
+        var updateData = data["data"][data["os"]];
+        console.log(updateData)
+        console.log("pueh3")
+        console.log(data["os"])
+        if(data["os"] == 'linux') {
+            console.log("entering here")
+            updateData = updateData[self.arch];
         }
 
         // Normalize the version number
+        /*
         if(!updateData.version.match(/-\d+$/)) {
             updateData.version += '-0';
         }
         if(!this.currentVersion.match(/-\d+$/)) {
             this.currentVersion += '-0';
-        }
+        }*/
+        console.log("pueh4")
+        //var self = data["this"]
+        console.log(gui.App.manifest.version)
+        console.log(self.currentVersion)
 
         if(semver.gt(updateData.version, this.currentVersion)) {
             win.debug('Updating to version %s', updateData.version);
@@ -141,6 +165,9 @@ Updater.prototype.check = function() {
             return true;
         }
 
+    console.log(">>> "+self.updateData)
+
+    console.log("latest version!")
         win.debug('Not updating because we are running the latest version');
         return false;
     });
