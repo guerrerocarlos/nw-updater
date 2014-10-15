@@ -36,7 +36,7 @@ With [npm](http://npmjs.org):
 
 ## Update.json:
 
-update.json checksums and signatures can be created using [node-sign-release](http://npmjs.org/packages/node-sign-release)
+update.json checksums and signatures can be created using [node-sign-release](http://npmjs.org/package/node-sign-release)
 
 ## Kudos
 
