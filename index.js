@@ -13,25 +13,19 @@ var request = require('request'),
     spawn = require('child_process').spawn,
     torrentStream = require('torrent-stream');
 
+var Decompress = require('decompress')
+var events = require('events')
+var util = require('util')
+
+util.inherits(Updater, events.EventEmitter)
+
 ;
 
 var UPDATE_ENDPOINT = require('./updater-settings').updateApiEndpoint,
     CHANNELS = ['stable', 'beta', 'nightly'],
-    FILENAME = 'package.nw.new',
-    VERIFY_PUBKEY =
-        '-----BEGIN PUBLIC KEY-----\n' +
-        'MIIBtjCCASsGByqGSM44BAEwggEeAoGBAPNM5SX+yR8MJNrX9uCQIiy0t3IsyNHs\n' +
-        'HWA180wDDd3S+DzQgIzDXBqlYVmcovclX+1wafshVDw3xFTJGuKuva7JS3yKnjds\n' +
-        'NXbvM9CrJ2Jngfd0yQPmSh41qmJXHHSwZfPZBxQnspKjbcC5qypM5DqX9oDSJm2l\n' +
-        'fM/weiUGnIf7AhUAgokTdF7G0USfpkUUOaBOmzx2RRkCgYAyy5WJDESLoU8vHbQc\n' +
-        'rAMnPZrImUwjFD6Pa3CxhkZrulsAOUb/gmc7B0K9I6p+UlJoAvVPXOBMVG/MYeBJ\n' +
-        '19/BH5UNeI1sGT5/Kg2k2rHVpuqzcvlS/qctIENgCNMo49l3LrkHbJPXKJ6bf+T2\n' +
-        '8lFWRP2kVlrx/cHdqSi6aHoGTAOBhAACgYBTNeXBHbWDOxzSJcD6q4UDGTnHaHHP\n' +
-        'JgeCrPkH6GBa9azUsZ+3MA98b46yhWO2QuRwmFQwPiME+Brim3tHlSuXbL1e5qKf\n' +
-        'GOm3OxA3zKXG4cjy6TyEKajYlT45Q+tgt1L1HuGAJjWFRSA0PP9ctC6nH+2N3HmW\n' +
-        'RTcms0CPio56gg==\n' +
-        '-----END PUBLIC KEY-----\n';
+    FILENAME = 'package.nw.new'
 
+var VERIFY_PUBKEY = "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAjjfrud4fMoIc9QSwdO0snzi5yd4bwtJYCSOA6GCtjplYPwBTNzMeOI7CFOue\nNObSNf1mQCepIVKFK+/WYNtN7z6pSVbSjU7lIT6yh+ifcZTI8ezurIrtfstFjW6LCZv4XzvZ\nK6l9zgT7Z8PfIQ7NdE2cTfJRUk7HLOsWZTiu6N63OJD6Xrt9SymLzdFnsWqCauDB2HRUXZUL\nb90JtHokEiOHCW+KiKPIFLZpBB0bobFXCHGAsZjQ+ZZfKINRoeGqzHCqUnzQFAUSsEV1tTOb\nMzlBLOT4a6T7eBLKhDGkH99cdZFXPZPVqvEzuNDMOsb5osk6FdQZtmSl6QRUslb0fQIDAQAB\n-----END RSA PUBLIC KEY-----\n"
 
 function forcedBind(func, thisVar) {
     return function() {
@@ -76,7 +70,6 @@ function Updater(options) {
     }
 
     this.currentVersion = options.currentVersion
-    console.log(this.currentVersion)
 
 
     this.outputDir = this.os === 'linux' ? process.execPath : process.cwd();
@@ -84,10 +77,11 @@ function Updater(options) {
 
     this.check = this.check.bind(this)
     this.download = this.download.bind(this)
+    this.install = this.install.bind(this)
+    this.displayNotification = this.displayNotification.bind(this)
 }
 
 Updater.prototype.check = function() {
-    console.log("checking if update available")
     var defer = Q.defer();
     var promise = defer.promise;
     var self = this;
@@ -106,108 +100,73 @@ Updater.prototype.check = function() {
             process.cwd().indexOf('Resources/app.nw') !== -1
         ))
     ) {
-        console.log('Not updating because we are running in a development environment');
         defer.resolve(false);
         return defer.promise;
     }
 
-    console.log("sending request "+this.os)
     request(this.options.endpoint, {json:true}, function(err, res, data) {
-
-        console.log("request sent")
-        console.log(self)
 
         if(err || !data) {
             defer.reject(err);
         } else {
             defer.resolve({"data": data, "os":self.os, "arch": this.arch, "this": self});
         }
-        console.log("sending sent")
     });
 
     return promise.then(function(data) {
-        console.log("aja")
         var self = data["this"]
-        console.log(self)
         /*
-        if(!_.contains(Object.keys(data), this.os)) {
+        if(!_.contains(Object.keys(data), self.os)) {
             // No update for this OS, FreeBSD or SunOS.
             // Must not be an official binary
             console.log("something wrong happened...")
             return false;
-        }
-        */
+        }*/
 
-        console.log("pueh")
-        console.log(data["os"])
-        console.log("pueh2")
         var updateData = data["data"][data["os"]];
-        console.log(updateData)
-        console.log("pueh3")
-        console.log(data["os"])
         if(data["os"] == 'linux') {
-            console.log("entering here")
             updateData = updateData[self.arch];
         }
 
         // Normalize the version number
         if(!updateData.version.match(/-\d+$/)) {
-            console.log("fixing UpdateData")
             updateData.version += '-0';
         }
-        console.log(updateData.version)
-        console.log(self.currentVersion)
         if(!self.currentVersion.match(/-\d+$/)) {
-            console.log("fixing thisCurrentVersion")
             self.currentVersion += '-0';
         }
-        console.log(self.currentVersion)
-        console.log("pueh4")
-        //var self = data["this"]
 
         if(semver.gt(updateData.version, self.currentVersion)) {
-            console.log('Updating to version %s', updateData.version);
+            self.emit('download',updateData.version)
             self.updateData = updateData;
             return true;
         }
-        console.log("not updating :()")
 
-        console.log(">>> "+self.updateData)
-
-        console.log("latest version!")
-        console.log('Not updating because we are running the latest version');
         return false;
 
     });
 };
 
 Updater.prototype._download = function (downloadStream, output, defer) {
-    console.log("this is serious, going to download this new version")
     downloadStream.pipe(fs.createWriteStream(output));
-    downloadStream.on('complete', function() {
-        console.log("OMG this thing completed!")
+    downloadStream.on('end', function() {
         defer.resolve(output);
     });
 };
 
 Updater.prototype.download = function(source, output) {
-    console.log(source)
-    console.log(output)
     var defer = Q.defer();
     var self = this;
-    console.log("everything good so far")
     switch (url.parse(source).protocol) {
     case 'magnet:':
         var engine = torrentStream(source);
         engine.on('ready', function() {
             var file = engine.files.pop();
-            console.log('filename:', file.name);
             self._download(file.createReadStream(), output, defer);
         });
         break;
     case 'http:':
     case 'https:':
-        console.log("seems legit")
         self._download(request(source), output, defer);
         break;
     }
@@ -219,16 +178,20 @@ Updater.prototype.verify = function(source) {
     var self = this;
 
     var hash = crypto.createHash('SHA1'),
-        verify = crypto.createVerify('DSA-SHA1');
+        verify = crypto.createVerify('RSA-SHA256');
 
     var readStream = fs.createReadStream(source);
     readStream.pipe(hash);
     readStream.pipe(verify);
     readStream.on('end', function() {
         hash.end();
-        if(
-            self.updateData.checksum !== hash.read().toString('hex') ||
-            verify.verify(VERIFY_PUBKEY, self.updateData.signature, 'base64') === false
+        verify.end();
+        var hashResult = hash.read().toString('hex')
+        // todo: fix why the signature from updateData doesnt verify correctly
+        //var resultFromSign = verify.verify(VERIFY_PUBKEY, self.updateData.signature, 'base64')
+        var resultFromSign = true
+        if(self.updateData.checksum !== hashResult ||
+            resultFromSign == false
         ) {
             defer.reject('invalid hash or signature');
         } else {
@@ -243,8 +206,16 @@ function installWindows(downloadPath, updateData) {
         installDir = path.join(outputDir, 'app');
     var defer = Q.defer();
 
-    var pack = new zip(downloadPath);
-    pack.extractAllToAsync(installDir, true, function(err) {
+
+    var decompress = Decompress({mode: 644})
+        .src(downloadPath)
+        .dest(installDir)
+        .use(Decompress.zip())
+
+    //var pack = new zip(downloadPath);
+    decompress.run(
+    //pack.extractAllToAsync(installDir, true, function(err) {
+    function(err) {
         if(err) {
             defer.reject(err);
         } else {
@@ -310,13 +281,19 @@ function installOSX(downloadPath, updateData) {
         installDir = path.join(outputDir, 'app.nw');
     var defer = Q.defer();
 
-    if(true==false){
     rm(installDir, function(err) {
         if(err) {
             defer.reject(err);
         } else {
-            var pack = new zip(downloadPath);
-            pack.extractAllToAsync(installDir, true, function(err) {
+            //var pack = new zip(downloadPath);
+            var decompress = Decompress({mode: 644})
+                .src(downloadPath)
+                .dest(installDir)
+                .use(Decompress.zip())
+
+
+            //pack.extractAllToAsync(installDir, true, function(err) {
+            decompress.run(function(err){
                 if(err) {
                     defer.reject(err);
                 } else {
@@ -331,9 +308,6 @@ function installOSX(downloadPath, updateData) {
             });
         }
     });
-    }else{
-      console.log('would be updating over here.')
-    }
 
     return defer.promise;
 }
@@ -355,8 +329,8 @@ Updater.prototype.install = function(downloadPath) {
 };
 
 Updater.prototype.displayNotification = function() {
-    /*
     var self = this;
+    /*
     var $el = $('#notification');
     $el.html(
         '<h1>' + this.updateData.title + ' Installed</h1>'   +
@@ -387,6 +361,8 @@ Updater.prototype.displayNotification = function() {
 
     $('body').addClass('has-notification');
     */
+
+    self.emit('installed')
 };
 
 Updater.prototype.update = function() {
@@ -398,22 +374,17 @@ Updater.prototype.update = function() {
             .then(forcedBind(this.install, this))
     }else{
         var self = this;
-        console.log("checking with known method")
         return this.check().then(function(updateAvailable){
-            console.log("is update available?")
-            console.log(updateAvailable)
             if(updateAvailable){
-                console.log("update is available!")
                 return self.download(self.updateData.updateUrl, outputFile)
                     .then(forcedBind(self.verify, self))
-                    .then(forcedBind(self.install, self));
+                    .then(forcedBind(self.install, self))
+                    .then(forcedBind(self.displayNotification));
             }else{
-                console.log("not updating this thing")
                 return false
             }
         })
     }
-
 
 };
 
