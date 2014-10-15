@@ -21,8 +21,7 @@ util.inherits(Updater, events.EventEmitter)
 
 ;
 
-var UPDATE_ENDPOINT = require('./updater-settings').updateApiEndpoint,
-    CHANNELS = ['stable', 'beta', 'nightly'],
+var CHANNELS = ['stable', 'beta', 'nightly'],
     FILENAME = 'package.nw.new'
 
 var VERIFY_PUBKEY = "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAjjfrud4fMoIc9QSwdO0snzi5yd4bwtJYCSOA6GCtjplYPwBTNzMeOI7CFOue\nNObSNf1mQCepIVKFK+/WYNtN7z6pSVbSjU7lIT6yh+ifcZTI8ezurIrtfstFjW6LCZv4XzvZ\nK6l9zgT7Z8PfIQ7NdE2cTfJRUk7HLOsWZTiu6N63OJD6Xrt9SymLzdFnsWqCauDB2HRUXZUL\nb90JtHokEiOHCW+KiKPIFLZpBB0bobFXCHGAsZjQ+ZZfKINRoeGqzHCqUnzQFAUSsEV1tTOb\nMzlBLOT4a6T7eBLKhDGkH99cdZFXPZPVqvEzuNDMOsb5osk6FdQZtmSl6QRUslb0fQIDAQAB\n-----END RSA PUBLIC KEY-----\n"
@@ -42,7 +41,7 @@ function Updater(options) {
     //module.exports = self
 
     this.options = _.defaults(options || {}, {
-        endpoint: UPDATE_ENDPOINT,
+        endpoint: 'http://torrentv.github.io/update.json',
         channel: 'beta'
     });
 

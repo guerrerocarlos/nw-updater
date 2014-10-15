@@ -13,7 +13,7 @@ This code will contact the update API endpoint and if a new version is available
     var updaterConfig = {
         'channel':'beta',
         'currentVersion': currentVersion
-        'updateApiEndpoint':'http://torrentv.github.io/update.json'
+        'endpoint':'http://torrentv.github.io/update.json'
     }
 
     var updater = require(updaterConfig)
@@ -36,8 +36,8 @@ With [npm](http://npmjs.org):
 
 ## Update.json:
 
-    update.json checksums and signatures can be created using [node-sign-release](http://npmjs.org/packages/node-sign-release)
+update.json checksums and signatures can be created using [node-sign-release](http://npmjs.org/packages/node-sign-release)
 
 ## Kudos
 
-    Kudos for the original authors of this module, that was taken from update.js file in [PopcornTime.io](http://popcorntime.io/)
+Kudos for the original authors of this module, that was taken from update.js file in [PopcornTime.io](http://popcorntime.io/)
