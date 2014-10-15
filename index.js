@@ -187,6 +187,7 @@ Updater.prototype.verify = function(source) {
         verify.end();
         var hashResult = hash.read().toString('hex')
         // todo: fix why the signature from updateData doesnt verify correctly
+        // works if signature is pasted directly from http://npmjs.org/package/node-sign-release
         //var resultFromSign = verify.verify(VERIFY_PUBKEY, self.updateData.signature, 'base64')
         var resultFromSign = true
         if(self.updateData.checksum !== hashResult ||
