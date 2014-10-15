@@ -40,4 +40,4 @@ update.json checksums and signatures can be created using [node-sign-release](ht
 
 ## Kudos
 
-Kudos for the original authors of this module, that was taken from update.js file in [PopcornTime.io](http://popcorntime.io/)
+Kudos for the original authors of this module, the [PopcornTime.io](http://popcorntime.io/) developers.
