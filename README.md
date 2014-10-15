@@ -2,7 +2,31 @@ node-webkit updater module
 =======================================================
 
 Automatically (and silently) updates node-webkit apps on the background
-if feeds from any [update.json](http://torrentv.github.io/update.json) file.
+
+## How it works?
+
+This code will contact the update API endpoint and if a new version is available, will download and install it.
+
+    var gui = require('nw.gui');
+    var currentVersion = gui.App.manifest.version
+
+    var updaterConfig = {
+        'channel':'beta',
+        'currentVersion': currentVersion
+        'updateApiEndpoint':'http://torrentv.github.io/update.json'
+    }
+
+    var updater = require(updaterConfig)
+    updater.update()
+
+    updater.on("download", function(version){
+        console.log("OH YEAH! going to download version "+version)
+    })
+
+    updater.on("installed", function(){
+        console.log("SUCCCESSFULLY installed, please restart")
+    })
+
 
 ## Installation 
 
