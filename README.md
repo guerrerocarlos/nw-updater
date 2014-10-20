@@ -32,7 +32,7 @@ With [npm](http://npmjs.org):
 
 It is designed to work with builds generated with [grunt-node-webkit-builder-for-nw-updater](https://github.com/guerrerocarlos/grunt-node-webkit-builder-for-nw-updater) 
 
-[![NPM](https://nodei.co/npm/grunt-node-webkit-builder-for-nw-updater.png?downloads=true)](https://nodei.co/npm/grunt-node-webkit-builder/)
+[![NPM](https://nodei.co/npm/grunt-node-webkit-builder-for-nw-updater.png?downloads=true)](https://nodei.co/npm/grunt-node-webkit-builder-for-nw-updater/)
 
 ## Update.json:
 
