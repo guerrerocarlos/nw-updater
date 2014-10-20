@@ -21,6 +21,7 @@ This code will contact the update API endpoint and if a new version is available
         console.log("SUCCCESSFULLY installed, please restart")
     })
 
+For an example update.json please visit: [http://torrentv.github.io/update.json](http://torrentv.github.io/update.json)
 
 ## Installation 
 
