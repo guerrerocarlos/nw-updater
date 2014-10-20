@@ -1,6 +1,6 @@
 {
   "name": "nw-updater",
-  "version": "0.0.8",
+  "version": "0.0.7",
   "description": "Node-webkit direct and distributed (torrent-based) auto-updater (taken from Popcorntime.io)",
   "main": "index.js",
   "scripts": {
