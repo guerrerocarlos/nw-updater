@@ -75,7 +75,6 @@ function Updater(options) {
     if(this.os === "linux" || this.os === "windows"){
         this.outputDir = process.execPath
     }
-    console.log("Houston, this is going to be the outputDir:"+this.outputDir)
 
     this.updateData = null;
 
@@ -123,7 +122,6 @@ Updater.prototype.check = function() {
         if(!_.contains(Object.keys(data), self.os)) {
             // No update for this OS, FreeBSD or SunOS.
             // Must not be an official binary
-            console.log("something wrong happened...")
             return false;
         }*/
 
@@ -152,16 +150,13 @@ Updater.prototype.check = function() {
 };
 
 Updater.prototype._download = function (downloadStream, output, defer) {
-    console.log("going to start downloading it"+downloadStream+" "+output)
     downloadStream.pipe(fs.createWriteStream(output));
     downloadStream.on('end', function() {
-        console.log("file downloaded:"+output)
         defer.resolve(output);
     });
 };
 
 Updater.prototype.download = function(source, output) {
-    console.log("processing the download")
     var defer = Q.defer();
     var self = this;
     switch (url.parse(source).protocol) {
@@ -208,19 +203,15 @@ Updater.prototype.verify = function(source) {
 };
 
 function installWindows(downloadPath, updateData) {
-    console.log("entering installWindows now "+downloadPath+" "+updateData)
     var outputDir = path.dirname(downloadPath),
         packageFile = path.join(outputDir, 'package.nw');
     var defer = Q.defer();
 
     fs.rename(packageFile, path.join(outputDir, 'package.nw.old'), function(err) {
-        console.log("rename actual to .old")
         if(err) {
-            console.log("error renaming!")
             defer.reject(err);
         } else {
             fs.rename(downloadPath, packageFile, function(err) {
-                console.log("renaming downloaded to new!")
                 if(err) {
                     // Sheeet! We got a booboo :'(
                     // Quick! Lets erase it before anyone realizes!
@@ -240,7 +231,6 @@ function installWindows(downloadPath, updateData) {
                     }
                 } else {
                     fs.unlink(path.join(outputDir, 'package.nw.old'), function(err) {
-                        console.log("erasing old grampaa!")
                         if(err) {
                             // This is a non-fatal error, should we reject?
                             defer.reject(err);
@@ -426,14 +416,14 @@ Updater.prototype.update = function() {
 
     if(this.updateData){
         return this.download(this.updateData.updateUrl, outputFile)
-            .then(forcedBind(this.verify, this))
+            .then(forcedBind(thisverify, this))
             .then(forcedBind(this.install, this))
     }else{
         var self = this;
         return this.check().then(function(updateAvailable){
             if(updateAvailable){
                 return self.download(self.updateData.updateUrl, outputFile)
-                    //.then(forcedBind(self.verify, self))
+                    .then(forcedBind(self.verify, self))
                     .then(forcedBind(self.install, self))
                     .then(forcedBind(self.displayNotification));
             }else{
