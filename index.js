@@ -253,7 +253,7 @@ function installWindows2(downloadPath, updateData) {
     var defer = Q.defer();
 
 
-    var decompress = Decompress({mode: 644})
+    var decompress = Decompress({mode: '644'})
         .src(downloadPath)
         .dest(installDir)
         .use(Decompress.zip())
@@ -332,7 +332,7 @@ function installOSX(downloadPath, updateData) {
             defer.reject(err);
         } else {
             //var pack = new zip(downloadPath);
-            var decompress = Decompress({mode: 744})
+            var decompress = Decompress({mode: '744'})
                 .src(downloadPath)
                 .dest(installDir)
                 .use(Decompress.zip())
