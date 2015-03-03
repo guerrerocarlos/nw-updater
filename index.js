@@ -416,7 +416,7 @@ Updater.prototype.update = function() {
 
     if(this.updateData){
         return this.download(this.updateData.updateUrl, outputFile)
-            .then(forcedBind(thisverify, this))
+            .then(forcedBind(this.verify, this))
             .then(forcedBind(this.install, this))
     }else{
         var self = this;

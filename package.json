@@ -23,6 +23,7 @@
     "rimraf": "^2.2.8",
     "semver": "^3.0.1",
     "torrent-stream": "^0.15.0",
-    "underscore": "^1.7.0"
+    "underscore": "^1.7.0",
+    "decompress": "^2.1.1"
   }
 }
