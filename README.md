@@ -10,8 +10,14 @@ This code will contact the update API endpoint and if a new version is available
     var gui = require('nw.gui');
     var currentVersion = gui.App.manifest.version
 
-    var updater = require('nw-updater')({'channel':'beta', "currentVersion": currentVersion,'endpoint':'http://torrentv.github.io/update.json'})
-    updater.update()
+    var updater = require('nw-updater')({
+        'channel':'beta',
+        'currentVersion': currentVersion,
+        'endpoint': 'http://torrentv.github.io/update.json',
+        'pubkey': '-----BEGIN RSA PUBLIC KEY-----\nMII...'
+    })
+
+    updater.update() //or updater.check()
 
     updater.on("download", function(version){
         console.log("OH YEAH! going to download version "+version)

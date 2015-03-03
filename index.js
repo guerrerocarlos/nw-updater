@@ -42,7 +42,8 @@ function Updater(options) {
 
     this.options = _.defaults(options || {}, {
         endpoint: 'http://torrentv.github.io/update.json',
-        channel: 'beta'
+        channel: 'beta',
+	    pubkey: VERIFY_PUBKEY
     });
 
     var os = ""
@@ -189,7 +190,7 @@ Updater.prototype.verify = function(source) {
         hash.end();
         verify.end();
         var hashResult = hash.read().toString('hex')
-        var resultFromSign = verify.verify(VERIFY_PUBKEY, self.updateData.signature+"", 'base64')
+        var resultFromSign = verify.verify(self.options.pubkey, self.updateData.signature+"", 'base64')
         if(self.updateData.checksum !== hashResult ||
             resultFromSign == false
         ) {
