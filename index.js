@@ -42,7 +42,8 @@ function Updater(options) {
 
     this.options = _.defaults(options || {}, {
         endpoint: 'http://torrentv.github.io/update.json',
-        channel: 'beta'
+        channel: 'beta',
+	    pubkey: VERIFY_PUBKEY
     });
 
     var os = ""
@@ -189,7 +190,7 @@ Updater.prototype.verify = function(source) {
         hash.end();
         verify.end();
         var hashResult = hash.read().toString('hex')
-        var resultFromSign = verify.verify(VERIFY_PUBKEY, self.updateData.signature+"", 'base64')
+        var resultFromSign = verify.verify(self.options.pubkey, self.updateData.signature+"", 'base64')
         if(self.updateData.checksum !== hashResult ||
             resultFromSign == false
         ) {
@@ -374,6 +375,12 @@ Updater.prototype.install = function(downloadPath) {
     return promise(downloadPath, this.updateData);
 };
 
+Updater.prototype._installed = function() {
+	var defer = Q.defer();
+	this.emit('installed');
+	return defer.promise;
+};
+
 Updater.prototype.displayNotification = function() {
     var self = this;
     /*
@@ -407,8 +414,6 @@ Updater.prototype.displayNotification = function() {
 
     $('body').addClass('has-notification');
     */
-
-    self.emit('installed')
 };
 
 Updater.prototype.update = function() {
@@ -418,6 +423,7 @@ Updater.prototype.update = function() {
         return this.download(this.updateData.updateUrl, outputFile)
             .then(forcedBind(this.verify, this))
             .then(forcedBind(this.install, this))
+	        .then(forcedBind(this._installed, this));
     }else{
         var self = this;
         return this.check().then(function(updateAvailable){
@@ -425,7 +431,8 @@ Updater.prototype.update = function() {
                 return self.download(self.updateData.updateUrl, outputFile)
                     .then(forcedBind(self.verify, self))
                     .then(forcedBind(self.install, self))
-                    .then(forcedBind(self.displayNotification));
+                    .then(forcedBind(self.displayNotification))
+	                .then(forcedBind(self._installed, self));
             }else{
                 return false
             }
